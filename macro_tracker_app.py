@@ -24,6 +24,19 @@ foods_df = pd.DataFrame(food_data)
 st.set_page_config(page_title="Macro Tracker", layout="centered")
 st.title("🍽️ Lean Bulk Macro Tracker")
 
+# --- Display macro reference table ---
+st.subheader("📋 Macro Content per Unit")
+reference_df = foods_df.copy()
+reference_df["Net Carbs/unit"] = reference_df["C/unit"] - reference_df["Fiber/unit"]
+reference_df = reference_df[["Item", "P/unit", "F/unit", "C/unit", "Fiber/unit", "Net Carbs/unit"]]
+st.dataframe(reference_df.rename(columns={
+    "P/unit": "Protein/unit",
+    "F/unit": "Fat/unit",
+    "C/unit": "Carbs/unit",
+    "Fiber/unit": "Fiber/unit",
+    "Net Carbs/unit": "Net Carbs/unit"
+}))
+
 # --- Sidebar: Set Macro Goals ---
 st.sidebar.header("Daily Macro Goals")
 cal_goal = st.sidebar.number_input("Calories", 1600, 4000, value=1600)
