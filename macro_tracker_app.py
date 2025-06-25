@@ -68,12 +68,12 @@ carb_goal = st.sidebar.number_input("Net Carbs (g)", min_value=0, value=121)
 st.subheader("📋 Macro Content per Unit")
 ref_df = foods_df.copy()
 ref_df["Net Carbs/unit"] = ref_df["C/unit"] - ref_df["Fiber/unit"]
-ref_df["Calories/unit"] = ref_df["P/unit"]*4 + ref_df["F/unit"]*9 + ref_df["Net Carbs/unit"]*4
+ref_df["Calories per unit"] = ref_df["P/unit"]*4 + ref_df["F/unit"]*9 + ref_df["Net Carbs/unit"]*4
 st.dataframe(ref_df.rename(columns={
     "Item":"Food","unit":"Unit",
     "P/unit":"Protein (g)","F/unit":"Fat (g)",
     "C/unit":"Carbs (g)","Fiber/unit":"Fiber (g)",
-    "Net Carbs/unit":"Net Carbs (g)","Calories/unit":"Calories per unit"
+    "Net Carbs/unit":"Net Carbs (g)","Calories per unit":"Calories per unit"
 })[["Food","Unit","Protein (g)","Fat (g)","Carbs (g)","Fiber (g)","Net Carbs (g)","Calories per unit"]])
 
 # --- Log Input ---
@@ -118,24 +118,8 @@ if not log_df.empty:
         "Calories": max(0, cal_goal - tot["Calories"])
     })
     st.subheader("✅ Progress vs Goal")
-    progress_df = pd.DataFrame({"Goal":[protein_goal,fat_goal,carb_goal,"-",cal_goal],
-                                "Consumed":tot,"Remaining":rem},
+    progress_df = pd.DataFrame({"Goal":[protein_goal,fat_goal,carb_goal,"-",cal_goal],"Consumed":tot,"Remaining":rem},
                                index=["Protein_g","Fat_g","Net_Carbs_g","Fiber_g","Calories"])
     st.dataframe(progress_df)
-
-    # Pie chart only if macros logged
-    macro_cal = tot["Protein_g"]*4 + tot["Fat_g"]*9 + tot["Net_Carbs_g"]*4
-    if macro_cal > 0:
-        pie = pd.Series({
-            "Protein": tot["Protein_g"]*4,
-            "Fat": tot["Fat_g"]*9,
-            "Net Carbs": tot["Net_Carbs_g"]*4
-        })
-        st.subheader("🍰 Macro Breakdown")
-        fig, ax = plt.subplots()
-        ax.pie(pie, labels=pie.index, autopct='%1.1f%%', startangle=90)
-        st.pyplot(fig)
-    else:
-        st.info("Log some macros to see the macro breakdown pie chart.")
 else:
     st.info("Add some food to begin tracking.")
