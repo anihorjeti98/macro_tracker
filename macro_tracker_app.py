@@ -63,7 +63,7 @@ if st.button("Add to Log"):
 log_df = pd.DataFrame(st.session_state.log)
 if not log_df.empty:
     # Merge and calculate macros per entry
-def adjust_macro(val, unit):
+    def adjust_macro(val, unit):
     return val / 100 if unit == "100g" else val
 n_df = log_df.merge(foods_df, on="Item")
 for m in ["P", "F", "C", "Fiber"]:
