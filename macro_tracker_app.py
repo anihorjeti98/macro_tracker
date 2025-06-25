@@ -27,10 +27,13 @@ st.title("🍽️ Lean Bulk Macro Tracker")
 # --- Macro reference table ---
 st.subheader("📋 Macro Content per Unit (per 'unit')")
 ref_df = foods_df.copy()
-# Calculate net carbs per unit and calories per unit
 ref_df["Net Carbs/unit"] = ref_df["C/unit"] - ref_df["Fiber/unit"]
-ref_df["Calories/unit"] = ref_df["P/unit"] * 4 + ref_df["F/unit"] * 9 + ref_df["Net Carbs/unit"] * 4
-# Display reference table including calories
+# Calculate calories per macro per unit
+ref_df["Cal from Protein/unit"] = ref_df["P/unit"] * 4
+ref_df["Cal from Fat/unit"] = ref_df["F/unit"] * 9
+ref_df["Cal from Net Carbs/unit"] = ref_df["Net Carbs/unit"] * 4
+# Total calories per unit
+ref_df["Calories/unit"] = ref_df["Cal from Protein/unit"] + ref_df["Cal from Fat/unit"] + ref_df["Cal from Net Carbs/unit"]
 st.dataframe(ref_df.rename(columns={
     "Item": "Food",
     "unit": "Unit",
@@ -39,8 +42,11 @@ st.dataframe(ref_df.rename(columns={
     "C/unit": "Carbs_per_unit (g)",
     "Fiber/unit": "Fiber_per_unit (g)",
     "Net Carbs/unit": "Net_Carbs_per_unit (g)",
+    "Cal from Protein/unit": "Cal_from_Protein_per_unit (kcal)",
+    "Cal from Fat/unit": "Cal_from_Fat_per_unit (kcal)",
+    "Cal from Net Carbs/unit": "Cal_from_Net_Carbs_per_unit (kcal)",
     "Calories/unit": "Calories_per_unit (kcal)"
-})[["Food","Unit","Protein_per_unit (g)","Fat_per_unit (g)","Carbs_per_unit (g)","Fiber_per_unit (g)","Net_Carbs_per_unit (g)","Calories_per_unit (kcal)"]])
+})[["Food","Unit","Protein_per_unit (g)","Fat_per_unit (g)","Carbs_per_unit (g)","Fiber_per_unit (g)","Net_Carbs_per_unit (g)","Cal_from_Protein_per_unit (kcal)","Cal_from_Fat_per_unit (kcal)","Cal_from_Net_Carbs_per_unit (kcal)","Calories_per_unit (kcal)"]])
 
 # --- Sidebar: Macro goals ---
 st.sidebar.header("🎯 Daily Macro Goals")
@@ -72,7 +78,6 @@ if not log_df.empty:
 
     n_df = log_df.merge(foods_df, on="Item")
     for m in ["P", "F", "C", "Fiber"]:
-        n_df[f"{m}_raw"] = n_df[f"{m}/unit"]
         n_df[f"{m}_g"] = n_df.apply(lambda r: adjust_macro(r[f"{m}/unit"] * r["Amount"], r["unit"]), axis=1)
     n_df.rename(columns={"P_g":"Protein_g","F_g":"Fat_g","C_g":"Carbs_g","Fiber_g":"Fiber_g"}, inplace=True)
     n_df["Net_Carbs_g"] = n_df["Carbs_g"] - n_df["Fiber_g"]
@@ -98,13 +103,4 @@ if not log_df.empty:
         "Calories": max(0, cal_goal - tot["Calories"])
     })
     st.subheader("✅ Progress vs Goal")
-    st.dataframe(pd.DataFrame({"Goal": [protein_goal,fat_goal,carb_goal,"-",cal_goal],"Consumed": tot,"Remaining": rem},index=["Protein_g","Fat_g","Net_Carbs_g","Fiber_g","Calories"]))
-
-    # Macro breakdown pie
-    pie = pd.Series({"Protein": tot["Protein_g"]*4, "Fat": tot["Fat_g"]*9, "Net Carbs": tot["Net_Carbs_g"]*4})
-    st.subheader("🍰 Macro Breakdown")
-    fig, ax = plt.subplots()
-    ax.pie(pie, labels=pie.index, autopct='%1.1f%%', startangle=90)
-    st.pyplot(fig)
-else:
-    st.info("Add some food to begin tracking.")
+    st.dataframe(pd.DataFrame({"Goal": [protein_go...
