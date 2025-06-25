@@ -2,8 +2,12 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# --- Food macro data with explicit unit field ---
-food_data = [
+# --- Streamlit page config ---
+st.set_page_config(page_title="Macro Tracker", layout="centered")
+st.title("🍽️ Lean Bulk Macro Tracker")
+
+# --- Base food macro data with explicit unit field ---
+base_foods = [
     {"Item": "Fairlife Shake",    "unit": "bottle", "P/unit": 30,     "F/unit": 2.5,   "C/unit": 4,     "Fiber/unit": 0},
     {"Item": "Whole Egg",         "unit": "egg",    "P/unit": 6,      "F/unit": 5,     "C/unit": 0.5,   "Fiber/unit": 0},
     {"Item": "Olive Oil",         "unit": "tbsp",   "P/unit": 0,      "F/unit": 14,    "C/unit": 0,     "Fiber/unit": 0},
@@ -17,11 +21,37 @@ food_data = [
     {"Item": "Cherries",          "unit": "100g",   "P/unit": 1.06,   "F/unit": 0.2,   "C/unit": 16,    "Fiber/unit": 2.1},
     {"Item": "Triscuit",          "unit": "pc",     "P/unit": 0.2,    "F/unit": 0.4,   "C/unit": 2.2,   "Fiber/unit": 0}
 ]
-foods_df = pd.DataFrame(food_data)
 
-# --- Streamlit config ---
-st.set_page_config(page_title="Macro Tracker", layout="centered")
-st.title("🍽️ Lean Bulk Macro Tracker")
+# --- Session State for custom foods and log ---
+if "custom_foods" not in st.session_state:
+    st.session_state.custom_foods = []
+if "log" not in st.session_state:
+    st.session_state.log = []
+if "next_id" not in st.session_state:
+    st.session_state.next_id = 1
+
+# --- Combine base and custom foods into DataFrame ---
+foods_df = pd.DataFrame(base_foods + st.session_state.custom_foods)
+
+# --- Sidebar: Add a custom food ---
+st.sidebar.header("➕ Add Custom Food")
+with st.sidebar.expander("Custom Food Entry", expanded=False):
+    new_name = st.text_input("Food Name", key="new_name")
+    new_unit = st.selectbox("Unit", ["100g", "g", "pc", "tbsp", "cup", "oz"], key="new_unit")
+    new_p = st.number_input("Protein per unit", min_value=0.0, key="new_p")
+    new_f = st.number_input("Fat per unit", min_value=0.0, key="new_f")
+    new_c = st.number_input("Carbs per unit", min_value=0.0, key="new_c")
+    new_fiber = st.number_input("Fiber per unit", min_value=0.0, key="new_fiber")
+    if st.button("Add Food", key="add_food"):
+        st.session_state.custom_foods.append({
+            "Item": new_name,
+            "unit": new_unit,
+            "P/unit": new_p,
+            "F/unit": new_f,
+            "C/unit": new_c,
+            "Fiber/unit": new_fiber
+        })
+        st.experimental_rerun()
 
 # --- Macro reference table ---
 st.subheader("📋 Macro Content per Unit")
@@ -35,87 +65,55 @@ ref_df["Calories/unit"] = (ref_df["Cal from Protein/unit"] +
                             ref_df["Cal from Net Carbs/unit"])
 st.dataframe(
     ref_df.rename(columns={
-        "Item": "Food",
-        "unit": "Unit",
-        "P/unit": "Protein_per_unit (g)",
-        "F/unit": "Fat_per_unit (g)",
-        "C/unit": "Carbs_per_unit (g)",
-        "Fiber/unit": "Fiber_per_unit (g)",
-        "Net Carbs/unit": "Net_Carbs_per_unit (g)",
-        "Cal from Protein/unit": "Cal_from_Protein_per_unit (kcal)",
-        "Cal from Fat/unit": "Cal_from_Fat_per_unit (kcal)",
-        "Cal from Net Carbs/unit": "Cal_from_Net_Carbs_per_unit (kcal)",
-        "Calories/unit": "Calories_per_unit (kcal)"
+        "Item": "Food", "unit": "Unit",
+        "P/unit": "Protein (g)", "F/unit": "Fat (g)",
+        "C/unit": "Carbs (g)", "Fiber/unit": "Fiber (g)",
+        "Net Carbs/unit": "Net Carbs (g)",
+        "Calories/unit": "Calories per unit"
     })[[
-        "Food", "Unit", "Protein_per_unit (g)", "Fat_per_unit (g)",
-        "Carbs_per_unit (g)", "Fiber_per_unit (g)",
-        "Net_Carbs_per_unit (g)",
-        "Cal_from_Protein_per_unit (kcal)",
-        "Cal_from_Fat_per_unit (kcal)",
-        "Cal_from_Net_Carbs_per_unit (kcal)",
-        "Calories_per_unit (kcal)"
+        "Food","Unit","Protein (g)","Fat (g)","Carbs (g)","Fiber (g)",
+        "Net Carbs (g)","Calories per unit"
     ]]
 )
 
-# --- Macro goals sidebar ---
+# --- Sidebar: Macro goals ---
 st.sidebar.header("🎯 Daily Macro Goals")
 cal_goal = st.sidebar.number_input("Calories", min_value=0, value=1600)
 protein_goal = st.sidebar.number_input("Protein (g)", min_value=0, value=180)
 fat_goal = st.sidebar.number_input("Fat (g)", min_value=0, value=44)
 carb_goal = st.sidebar.number_input("Net Carbs (g)", min_value=0, value=121)
 
-# --- Initialize session state ---
-if "log" not in st.session_state:
-    st.session_state.log = []
-if "next_id" not in st.session_state:
-    st.session_state.next_id = 1
-
 # --- Log input ---
 st.subheader("➕ Log a Food Item")
 choice = st.selectbox("Food", foods_df["Item"])
 amt = st.number_input("Amount (in unit)", min_value=0.0, step=0.1)
-if st.button("Add to Log"):
+if st.button("Add to Log", key="add_log"):
     st.session_state.log.append({"id": st.session_state.next_id, "Item": choice, "Amount": amt})
     st.session_state.next_id += 1
 
 # --- Display and manage log ---
 log_df = pd.DataFrame(st.session_state.log)
 if not log_df.empty:
-    # Merge and calculate macros
     def adjust_macro(val, unit):
         return val / 100 if unit == "100g" else val
-
     n_df = log_df.merge(foods_df, on="Item")
-    for m in ["P", "F", "C", "Fiber"]:
+    for m in ["P","F","C","Fiber"]:
         n_df[f"{m}_g"] = n_df.apply(
             lambda r: adjust_macro(r[f"{m}/unit"] * r["Amount"], r["unit"]), axis=1
         )
-    n_df.rename(columns={
-        "P_g": "Protein_g",
-        "F_g": "Fat_g",
-        "C_g": "Carbs_g",
-        "Fiber_g": "Fiber_g"
-    }, inplace=True)
+    n_df.rename(columns={"P_g":"Protein_g","F_g":"Fat_g","C_g":"Carbs_g","Fiber_g":"Fiber_g"}, inplace=True)
     n_df["Net_Carbs_g"] = n_df["Carbs_g"] - n_df["Fiber_g"]
-    n_df["Calories"] = (
-        n_df["Protein_g"] * 4 +
-        n_df["Fat_g"] * 9 +
-        n_df["Net_Carbs_g"] * 4
-    )
-
+    n_df["Calories"] = n_df["Protein_g"]*4 + n_df["Fat_g"]*9 + n_df["Net_Carbs_g"]*4
+    
     st.subheader("📝 Current Log")
-    st.dataframe(
-        n_df[["id", "Item", "Amount", "unit", "Protein_g", "Fat_g", "Net_Carbs_g", "Fiber_g", "Calories"]]
-    )
+    st.dataframe(n_df[["id","Item","Amount","unit","Protein_g","Fat_g","Net_Carbs_g","Fiber_g","Calories"]])
 
-    # Delete entry dropdown
-    sel = st.selectbox("Select ID to delete", options=n_df["id"].tolist())
-    if st.button("Delete Entry"):
+    sel = st.selectbox("Select ID to delete", options=n_df["id"].tolist(), key="del_select")
+    if st.button("Delete Entry", key="del_btn"):
         st.session_state.log = [e for e in st.session_state.log if e["id"] != sel]
         st.experimental_rerun()
 
-    # Totals and remaining
-    tot = n_df[["Protein_g", "Fat_g", "Net_Carbs_g", "Fiber_g", "Calories"]].sum()
+    tot = n_df[["Protein_g","Fat_g","Net_Carbs_g","Fiber_g","Calories"]].sum()
     rem = pd.Series({
         "Protein_g": max(0, protein_goal - tot["Protein_g"]),
         "Fat_g": max(0, fat_goal - tot["Fat_g"]),
@@ -124,19 +122,11 @@ if not log_df.empty:
         "Calories": max(0, cal_goal - tot["Calories"])
     })
     st.subheader("✅ Progress vs Goal")
-    progress_df = pd.DataFrame({
-        "Goal": [protein_goal, fat_goal, carb_goal, "-", cal_goal],
-        "Consumed": tot,
-        "Remaining": rem
-    }, index=["Protein_g", "Fat_g", "Net_Carbs_g", "Fiber_g", "Calories"] )
+    progress_df = pd.DataFrame({"Goal": [protein_goal,fat_goal,carb_goal,"-",cal_goal],"Consumed": tot,"Remaining": rem},
+                               index=["Protein_g","Fat_g","Net_Carbs_g","Fiber_g","Calories"])
     st.dataframe(progress_df)
 
-    # Macro breakdown pie chart
-    pie = pd.Series({
-        "Protein": tot["Protein_g"] * 4,
-        "Fat": tot["Fat_g"] * 9,
-        "Net Carbs": tot["Net_Carbs_g"] * 4
-    })
+    pie = pd.Series({"Protein": tot["Protein_g"]*4, "Fat": tot["Fat_g"]*9, "Net Carbs": tot["Net_Carbs_g"]*4})
     st.subheader("🍰 Macro Breakdown")
     fig, ax = plt.subplots()
     ax.pie(pie, labels=pie.index, autopct='%1.1f%%', startangle=90)
