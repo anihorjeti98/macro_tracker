@@ -27,7 +27,10 @@ st.title("🍽️ Lean Bulk Macro Tracker")
 # --- Macro reference table ---
 st.subheader("📋 Macro Content per Unit (per 'unit')")
 ref_df = foods_df.copy()
+# Calculate net carbs per unit and calories per unit
 ref_df["Net Carbs/unit"] = ref_df["C/unit"] - ref_df["Fiber/unit"]
+ref_df["Calories/unit"] = ref_df["P/unit"] * 4 + ref_df["F/unit"] * 9 + ref_df["Net Carbs/unit"] * 4
+# Display reference table including calories
 st.dataframe(ref_df.rename(columns={
     "Item": "Food",
     "unit": "Unit",
@@ -35,8 +38,9 @@ st.dataframe(ref_df.rename(columns={
     "F/unit": "Fat_per_unit (g)",
     "C/unit": "Carbs_per_unit (g)",
     "Fiber/unit": "Fiber_per_unit (g)",
-    "Net Carbs/unit": "Net_Carbs_per_unit (g)"
-}))
+    "Net Carbs/unit": "Net_Carbs_per_unit (g)",
+    "Calories/unit": "Calories_per_unit (kcal)"
+})[["Food","Unit","Protein_per_unit (g)","Fat_per_unit (g)","Carbs_per_unit (g)","Fiber_per_unit (g)","Net_Carbs_per_unit (g)","Calories_per_unit (kcal)"]])
 
 # --- Sidebar: Macro goals ---
 st.sidebar.header("🎯 Daily Macro Goals")
