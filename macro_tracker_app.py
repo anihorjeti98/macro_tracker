@@ -7,14 +7,14 @@ food_data = [
     {"Item": "Fairlife Shake",    "P/unit": 30,     "F/unit": 2.5,   "C/unit": 4,     "Fiber/unit": 0},
     {"Item": "Whole Egg",         "P/unit": 6,      "F/unit": 5,     "C/unit": 0.5,   "Fiber/unit": 0},
     {"Item": "Olive Oil (tbsp)",  "P/unit": 0,      "F/unit": 14,    "C/unit": 0,     "Fiber/unit": 0},
-    {"Item": "Feta Cheese (28g)", "P/unit": 4,      "F/unit": 6,     "C/unit": 1,     "Fiber/unit": 0},
-    {"Item": "Banana (g)",        "P/unit": 0.011,  "F/unit": 0.003, "C/unit": 0.23,  "Fiber/unit": 0.026},
-    {"Item": "Strawberries (g)",  "P/unit": 0.005,  "F/unit": 0.002, "C/unit": 0.06,  "Fiber/unit": 0.02},
-    {"Item": "Blueberries (g)",   "P/unit": 0.007,  "F/unit": 0.003, "C/unit": 0.14,  "Fiber/unit": 0.025},
-    {"Item": "Blackberries (g)",  "P/unit": 0.014,  "F/unit": 0.005, "C/unit": 0.10,  "Fiber/unit": 0.05},
+    {"Item": "Feta Cheese (100g)", "P/unit": 14,     "F/unit": 21,    "C/unit": 4,     "Fiber/unit": 0},
+    {"Item": "Banana (100g)",      "P/unit": 1.1,    "F/unit": 0.3,   "C/unit": 23,    "Fiber/unit": 2.6},
+    {"Item": "Strawberries (100g)","P/unit": 0.5,    "F/unit": 0.2,   "C/unit": 6,     "Fiber/unit": 2},
+    {"Item": "Blueberries (100g)", "P/unit": 0.7,    "F/unit": 0.3,   "C/unit": 14,    "Fiber/unit": 2.5},
+    {"Item": "Blackberries (100g)","P/unit": 1.4,    "F/unit": 0.5,   "C/unit": 10,    "Fiber/unit": 5},
     {"Item": "Crackers (pc)",     "P/unit": 0.16,   "F/unit": 0.8,   "C/unit": 2,     "Fiber/unit": 0.2},
     {"Item": "Honey (tbsp)",      "P/unit": 0.1,    "F/unit": 0,     "C/unit": 17,    "Fiber/unit": 0},
-    {"Item": "Cherries (g)",      "P/unit": 0.0106, "F/unit": 0.002, "C/unit": 0.16,  "Fiber/unit": 0.021},
+    {"Item": "Cherries (100g)",   "P/unit": 1.06,   "F/unit": 0.2,   "C/unit": 16,    "Fiber/unit": 2.1},
     {"Item": "Triscuit (pc)",     "P/unit": 0.2,    "F/unit": 0.4,   "C/unit": 2.2,   "Fiber/unit": 0}
 ]
 
@@ -47,27 +47,35 @@ carb_goal = st.sidebar.number_input("Net Carbs (g)", 0, 400, value=121)
 # --- Tracker session state ---
 if "log" not in st.session_state:
     st.session_state.log = []
+if "log_index" not in st.session_state:
+    st.session_state.log_index = 0
 
 # --- Input Section ---
-st.subheader("📥 Log a Food Item")
+st.subheader("📅 Log a Food Item")
 food = st.selectbox("Food Item", foods_df["Item"])
 amount = st.number_input("Amount (g, pc, or tbsp)", 0.0, 1000.0, step=1.0)
 if st.button("Add to Log"):
-    st.session_state.log.append({"Item": food, "Amount": amount})
+    st.session_state.log.append({"id": st.session_state.log_index, "Item": food, "Amount": amount})
+    st.session_state.log_index += 1
 
 # --- Display Table ---
 log_df = pd.DataFrame(st.session_state.log)
 if not log_df.empty:
     merged = log_df.merge(foods_df, on="Item")
-    merged["Protein_g"] = merged["Amount"] * merged["P/unit"]
-    merged["Fat_g"] = merged["Amount"] * merged["F/unit"]
-    merged["Carbs_g"] = merged["Amount"] * merged["C/unit"]
-    merged["Fiber_g"] = merged["Amount"] * merged["Fiber/unit"]
+    merged["Protein_g"] = merged["Amount"] * merged["P/unit"] / 100 if "(100g)" in merged["Item"].iloc[0] else merged["Amount"] * merged["P/unit"]
+    merged["Fat_g"] = merged["Amount"] * merged["F/unit"] / 100 if "(100g)" in merged["Item"].iloc[0] else merged["Amount"] * merged["F/unit"]
+    merged["Carbs_g"] = merged["Amount"] * merged["C/unit"] / 100 if "(100g)" in merged["Item"].iloc[0] else merged["Amount"] * merged["C/unit"]
+    merged["Fiber_g"] = merged["Amount"] * merged["Fiber/unit"] / 100 if "(100g)" in merged["Item"].iloc[0] else merged["Amount"] * merged["Fiber/unit"]
     merged["Net_Carbs_g"] = merged["Carbs_g"] - merged["Fiber_g"]
     merged["Calories"] = merged["Protein_g"] * 4 + merged["Fat_g"] * 9 + merged["Net_Carbs_g"] * 4
 
     st.subheader("📊 Current Log")
-    st.dataframe(merged[["Item", "Amount", "Protein_g", "Fat_g", "Net_Carbs_g", "Fiber_g", "Calories"]])
+    st.dataframe(merged[["id", "Item", "Amount", "Protein_g", "Fat_g", "Net_Carbs_g", "Fiber_g", "Calories"]])
+
+    delete_id = st.number_input("Enter log ID to delete", min_value=0, step=1)
+    if st.button("Delete Entry"):
+        st.session_state.log = [entry for entry in st.session_state.log if entry["id"] != delete_id]
+        st.experimental_rerun()
 
     totals = merged[["Protein_g", "Fat_g", "Net_Carbs_g", "Fiber_g", "Calories"]].sum()
     remaining = pd.Series({
