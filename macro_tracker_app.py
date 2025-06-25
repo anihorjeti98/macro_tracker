@@ -64,40 +64,43 @@ log_df = pd.DataFrame(st.session_state.log)
 if not log_df.empty:
     # Merge and calculate macros per entry
     def adjust_macro(val, unit):
-    return val / 100 if unit == "100g" else val
-n_df = log_df.merge(foods_df, on="Item")
-for m in ["P", "F", "C", "Fiber"]:
-    n_df[f"{m}_raw"] = n_df[f"{m}/unit"]
-    n_df[f"{m}_g"] = n_df.apply(lambda r: adjust_macro(r[f"{m}/unit"] * r["Amount"], r["unit"]), axis=1)
-n_df.rename(columns={"P_g":"Protein_g","F_g":"Fat_g","C_g":"Carbs_g","Fiber_g":"Fiber_g"}, inplace=True)
-n_df["Net_Carbs_g"] = n_df["Carbs_g"] - n_df["Fiber_g"]
-n_df["Calories"] = n_df["Protein_g"]*4 + n_df["Fat_g"]*9 + n_df["Net_Carbs_g"]*4
+        return val / 100 if unit == "100g" else val
 
-# show log
-st.subheader("📝 Current Log")
-st.dataframe(n_df[["id","Item","Amount","unit","Protein_g","Fat_g","Net_Carbs_g","Fiber_g","Calories"]])
+    n_df = log_df.merge(foods_df, on="Item")
+    for m in ["P", "F", "C", "Fiber"]:
+        n_df[f"{m}_raw"] = n_df[f"{m}/unit"]
+        n_df[f"{m}_g"] = n_df.apply(lambda r: adjust_macro(r[f"{m}/unit"] * r["Amount"], r["unit"]), axis=1)
+    n_df.rename(columns={"P_g":"Protein_g","F_g":"Fat_g","C_g":"Carbs_g","Fiber_g":"Fiber_g"}, inplace=True)
+    n_df["Net_Carbs_g"] = n_df["Carbs_g"] - n_df["Fiber_g"]
+    n_df["Calories"] = n_df["Protein_g"]*4 + n_df["Fat_g"]*9 + n_df["Net_Carbs_g"]*4
 
-# delete entry
-sel = st.selectbox("Select ID to delete", n_df["id"].tolist())
-if st.button("Delete Entry"):
-    st.session_state.log = [e for e in st.session_state.log if e["id"] != sel]
-    st.experimental_rerun()
+    # Show log
+    st.subheader("📝 Current Log")
+    st.dataframe(n_df[["id","Item","Amount","unit","Protein_g","Fat_g","Net_Carbs_g","Fiber_g","Calories"]])
 
-# totals
-tot = n_df[["Protein_g","Fat_g","Net_Carbs_g","Fiber_g","Calories"]].sum()
-rem = pd.Series({
-    "Protein_g": max(0, protein_goal - tot["Protein_g"]),
-    "Fat_g": max(0, fat_goal - tot["Fat_g"]),
-    "Net_Carbs_g": max(0, carb_goal - tot["Net_Carbs_g"]),
-    "Fiber_g": "-",
-    "Calories": max(0, cal_goal - tot["Calories"])
-})
-st.subheader("✅ Progress vs Goal")
-st.dataframe(pd.DataFrame({"Goal": [protein_goal,fat_goal,carb_goal,"-",cal_goal],"Consumed": tot,"Remaining": rem},index=["Protein_g","Fat_g","Net_Carbs_g","Fiber_g","Calories"]))
+    # Delete entry
+    sel = st.selectbox("Select ID to delete", n_df["id"].tolist())
+    if st.button("Delete Entry"):
+        st.session_state.log = [e for e in st.session_state.log if e["id"] != sel]
+        st.experimental_rerun()
 
-# macro breakdown pie
-pie = pd.Series({"Protein": tot["Protein_g"]*4, "Fat": tot["Fat_g"]*9, "Net Carbs": tot["Net_Carbs_g"]*4})
-st.subheader("🍰 Macro Breakdown")
-fig,ax=plt.subplots()
-ax.pie(pie, labels=pie.index, autopct='%1.1f%%', startangle=90)
-st.pyplot(fig)
+    # Totals & remaining
+    tot = n_df[["Protein_g","Fat_g","Net_Carbs_g","Fiber_g","Calories"]].sum()
+    rem = pd.Series({
+        "Protein_g": max(0, protein_goal - tot["Protein_g"]),
+        "Fat_g": max(0, fat_goal - tot["Fat_g"]),
+        "Net_Carbs_g": max(0, carb_goal - tot["Net_Carbs_g"]),
+        "Fiber_g": "-",
+        "Calories": max(0, cal_goal - tot["Calories"])
+    })
+    st.subheader("✅ Progress vs Goal")
+    st.dataframe(pd.DataFrame({"Goal": [protein_goal,fat_goal,carb_goal,"-",cal_goal],"Consumed": tot,"Remaining": rem},index=["Protein_g","Fat_g","Net_Carbs_g","Fiber_g","Calories"]))
+
+    # Macro breakdown pie
+    pie = pd.Series({"Protein": tot["Protein_g"]*4, "Fat": tot["Fat_g"]*9, "Net Carbs": tot["Net_Carbs_g"]*4})
+    st.subheader("🍰 Macro Breakdown")
+    fig, ax = plt.subplots()
+    ax.pie(pie, labels=pie.index, autopct='%1.1f%%', startangle=90)
+    st.pyplot(fig)
+else:
+    st.info("Add some food to begin tracking.")
