@@ -21,7 +21,7 @@ presets_df = pd.DataFrame(presets).set_index("Week")
 
 # --- Display presets table above menu ---
 st.subheader("📑 Available Macro Goal Presets")
-st.dataframe(presets_df)
+st.table(presets_df)
 
 # --- User selects a plan ---
 plan = st.selectbox("Select your macro goal week:", presets_df.index.tolist())
@@ -39,7 +39,7 @@ else:
     protein_goal = int(selected["Protein (g)"])
     fat_goal = int(selected["Fat (g)"])
     carb_goal = int(selected["Net Carbs (g)"])
-    st.write(f"**Selected {plan} ({selected['Dates']})**: {cal_goal} kcal, {protein_goal}g P, {fat_goal}g F, {carb_goal}g C")
+    st.markdown(f"**Selected {plan} ({selected['Dates']})**:<br>{cal_goal} kcal, {protein_goal}g P, {fat_goal}g F, {carb_goal}g C", unsafe_allow_html=True)
 
 # --- Base food macro data ---
 base_foods = [
@@ -123,9 +123,4 @@ if st.session_state.log:
         st.session_state.next_id = 1
 
     tot = n_df[["Protein_g","Fat_g","Net_Carbs_g","Fiber_g","Calories"]].sum()
-    rem = pd.Series({"Protein_g": max(0, protein_goal - tot["Protein_g"]), "Fat_g": max(0, fat_goal - tot["Fat_g"]), "Net_Carbs_g": max(0, carb_goal - tot["Net_Carbs_g"]), "Fiber_g": "-", "Calories": max(0, cal_goal - tot["Calories"])})
-    st.subheader("✅ Progress vs Goal")
-    progress_df = pd.DataFrame({"Goal":[protein_goal,fat_goal,carb_goal,"-",cal_goal],"Consumed":tot,"Remaining":rem}, index=["Protein_g","Fat_g","Net_Carbs_g","Fiber_g","Calories"])
-    st.dataframe(progress_df)
-else:
-    st.info("Add some food to begin tracking.")
+    rem = pd.Series({"Protein_g": max(0, protein_goal - tot["Protein_g"]), "Fat_g": max(0, fat_goal - tot["Fat_g"]), "Net_Carbs_g": max(0, carb_goal - tot["Net Carbs_g"]), "Fiber_g": "-", "Calories": max(0, cal_goal - tot["Calories"])})
