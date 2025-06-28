@@ -43,7 +43,7 @@ else:
         unsafe_allow_html=True
     )
 
-# --- Initial food data ---
+# --- Food macro data ---
 base_foods = [
     {"Item": "Fairlife Shake", "unit": "bottle", "P/unit": 30, "F/unit": 2.5, "C/unit": 4, "Fiber/unit": 0, "Cal/unit": None},
     {"Item": "Whole Egg",      "unit": "egg",    "P/unit": 6,  "F/unit": 5,   "C/unit": 0.5, "Fiber/unit": 0, "Cal/unit": None},
@@ -60,35 +60,12 @@ base_foods = [
 ]
 
 # --- Session state init ---
-if "custom_foods" not in st.session_state:
-    st.session_state.custom_foods = []
-if "log" not in st.session_state:
-    st.session_state.log = []
-if "next_id" not in st.session_state:
-    st.session_state.next_id = 1
+if "custom_foods" not in st.session_state: st.session_state.custom_foods = []
+if "log" not in st.session_state: st.session_state.log = []
+if "next_id" not in st.session_state: st.session_state.next_id = 1
 
 # --- Merge foods ---
 foods_df = pd.DataFrame(base_foods + st.session_state.custom_foods)
-
-# --- Callback functions ---
-def add_custom_food():
-    st.session_state.custom_foods.append({
-        "Item": st.session_state.menu_name,
-        "unit": st.session_state.menu_unit,
-        "P/unit": st.session_state.menu_p,
-        "F/unit": st.session_state.menu_f,
-        "C/unit": st.session_state.menu_c,
-        "Fiber/unit": st.session_state.menu_fiber,
-        "Cal/unit": st.session_state.menu_cal
-    })
-
-def add_log_item():
-    st.session_state.log.append({
-        "id": st.session_state.next_id,
-        "Item": st.session_state.log_choice,
-        "Amount": st.session_state.log_amt
-    })
-    st.session_state.next_id += 1
 
 # --- Macro Reference Table ---
 st.subheader("📋 Macro Content per Unit")
@@ -96,31 +73,29 @@ ref_df = foods_df.copy()
 ref_df["Net Carbs/unit"] = ref_df["C/unit"] - ref_df["Fiber/unit"]
 calc = ref_df["P/unit"]*4 + ref_df["F/unit"]*9 + ref_df["Net Carbs/unit"]*4
 ref_df["Calories per unit"] = ref_df["Cal/unit"].fillna(calc)
-st.dataframe(
-    ref_df.rename(columns={
-        "Item":"Food","unit":"Unit",
-        "P/unit":"Protein (g)","F/unit":"Fat (g)",
-        "C/unit":"Carbs (g)","Fiber/unit":"Fiber (g)",
-        "Net Carbs/unit":"Net Carbs (g)","Calories per unit":"Calories per unit"
-    })[["Food","Unit","Protein (g)","Fat (g)","Carbs (g)","Fiber (g)","Net Carbs (g)","Calories per unit"]]
-)
+st.dataframe(ref_df.rename(columns={"Item":"Food","unit":"Unit","P/unit":"Protein (g)","F/unit":"Fat (g)","C/unit":"Carbs (g)","Fiber/unit":"Fiber (g)","Net Carbs/unit":"Net Carbs (g)","Calories per unit":"Calories per unit"})[["Food","Unit","Protein (g)","Fat (g)","Carbs (g)","Fiber (g)","Net Carbs (g)","Calories per unit"]])
 
-# --- Custom Food Input ---
+# --- Add Custom Food (with calories) ---
 st.subheader("➕ Add a Custom Food to Menu")
-st.text_input("Food Name", key="menu_name")
-st.selectbox("Unit", ["100g","g","pc","tbsp","cup","oz"], key="menu_unit")
-st.number_input("Protein per unit (g)", min_value=0.0, key="menu_p")
-st.number_input("Fat per unit (g)", min_value=0.0, key="menu_f")
-st.number_input("Carbs per unit (g)", min_value=0.0, key="menu_c")
-st.number_input("Fiber per unit (g)", min_value=0.0, key="menu_fiber")
-st.number_input("Calories per unit", min_value=0.0, key="menu_cal")
-st.button("Add to Menu", on_click=add_custom_food, key="add_menu_button")
+with st.form(key="menu_form", clear_on_submit=True):
+    name = st.text_input("Food Name", key="menu_name")
+    unit = st.selectbox("Unit", ["100g","g","pc","tbsp","cup","oz"], key="menu_unit")
+    p = st.number_input("Protein per unit (g)", min_value=0.0, key="menu_p")
+    f = st.number_input("Fat per unit (g)", min_value=0.0, key="menu_f")
+    c = st.number_input("Carbs per unit (g)", min_value=0.0, key="menu_c")
+    fiber = st.number_input("Fiber per unit (g)", min_value=0.0, key="menu_fiber")
+    cal = st.number_input("Calories per unit", min_value=0.0, key="menu_cal")
+    if st.form_submit_button("Add to Menu"):
+        st.session_state.custom_foods.append({"Item": name, "unit": unit, "P/unit": p, "F/unit": f, "C/unit": c, "Fiber/unit": fiber, "Cal/unit": cal})
 
-# --- Log Input ---
+# --- Log Input via form ---
 st.subheader("➕ Log a Food Item")
-st.selectbox("Food to Log", foods_df["Item"], key="log_choice")
-st.number_input("Amount (in unit)", min_value=0.0, step=0.1, key="log_amt")
-st.button("Add to Log", on_click=add_log_item, key="add_log_button")
+with st.form(key="log_form", clear_on_submit=True):
+    choice = st.selectbox("Food to Log", foods_df["Item"], key="log_choice")
+    amt = st.number_input("Amount (in unit)", min_value=0.0, step=0.1, key="log_amt")
+    if st.form_submit_button("Add to Log"):
+        st.session_state.log.append({"id": st.session_state.next_id, "Item": choice, "Amount": amt})
+        st.session_state.next_id += 1
 
 # --- Display and Manage Log ---
 if st.session_state.log:
@@ -132,29 +107,15 @@ if st.session_state.log:
     n_df.rename(columns={"P_g":"Protein_g","F_g":"Fat_g","C_g":"Carbs_g","Fiber_g":"Fiber_g"}, inplace=True)
     n_df["Net_Carbs_g"] = n_df["Carbs_g"] - n_df["Fiber_g"]
     n_df["Calories"] = n_df["Protein_g"]*4 + n_df["Fat_g"]*9 + n_df["Net_Carbs_g"]*4
-
     st.subheader("📝 Current Log")
     st.dataframe(n_df[["id","Item","Amount","unit","Protein_g","Fat_g","Net_Carbs_g","Fiber_g","Calories"]])
     sel = st.selectbox("Select ID to delete", options=n_df["id"].tolist(), key="del_id")
-    if st.button("Delete Entry", key="del_entry_button"):
-        st.session_state.log = [e for e in st.session_state.log if e["id"]!=sel]
-    if st.button("Reset Log", key="reset_log_button"):
-        st.session_state.log = []
-        st.session_state.next_id = 1
+    if st.button("Delete Entry", key="del_entry_button"): st.session_state.log = [e for e in st.session_state.log if e["id"]!=sel]
+    if st.button("Reset Log", key="reset_log_button"): st.session_state.log, st.session_state.next_id = [], 1
     tot = n_df[["Protein_g","Fat_g","Net_Carbs_g","Fiber_g","Calories"]].sum()
-    rem = pd.Series({
-        "Protein_g": max(0, protein_goal - tot["Protein_g"]),
-        "Fat_g": max(0, fat_goal - tot["Fat_g"]),
-        "Net_Carbs_g": max(0, carb_goal - tot["Net_Carbs_g"]),
-        "Fiber_g": "-",
-        "Calories": max(0, cal_goal - tot["Calories"])
-    })
+    rem = pd.Series({"Protein_g": max(0, protein_goal - tot["Protein_g"]), "Fat_g": max(0, fat_goal - tot["Fat_g"]), "Net_Carbs_g": max(0, carb_goal - tot["Net_Carbs_g"]), "Fiber_g": "-", "Calories": max(0, cal_goal - tot["Calories"])})
     st.subheader("✅ Progress vs Goal")
-    progress_df = pd.DataFrame({
-        "Goal": [protein_goal, fat_goal, carb_goal, "-", cal_goal],
-        "Consumed": tot,
-        "Remaining": rem
-    }, index=["Protein_g","Fat_g","Net_Carbs_g","Fiber_g","Calories"])  
+    progress_df = pd.DataFrame({"Goal":[protein_goal, fat_goal, carb_goal, "-", cal_goal], "Consumed": tot, "Remaining": rem}, index=["Protein_g","Fat_g","Net_Carbs_g","Fiber_g","Calories"])
     st.dataframe(progress_df)
 else:
     st.info("Add some food to begin tracking.")
