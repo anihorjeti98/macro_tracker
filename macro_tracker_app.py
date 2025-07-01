@@ -56,7 +56,7 @@ base_foods = [
     {"Item":"Cracker","unit":"pc","P/unit":0.2,"F/unit":0.4,"C/unit":2.2,"Fiber/unit":0.2,"Cal/unit":None},
     {"Item":"Honey","unit":"tbsp","P/unit":0.1,"F/unit":0,"C/unit":17,"Fiber/unit":0,"Cal/unit":None},
     {"Item":"Cherries","unit":"100g","P/unit":1.06,"F/unit":0.2,"C/unit":16,"Fiber/unit":2.1,"Cal/unit":None},
-    {"Item":"Triscuit","unit":"pc","P/unit":0.2,"F/unit":0.4,"C/unit":2.2,"Fiber/unit":0,"Cal/unit":None},
+    {"Item":"Trisc","unit":"pc","P/unit":0.2,"F/unit":0.4,"C/unit":2.2,"Fiber/unit":0,"Cal/unit":None},
 ]
 
 # --- Session state init ---
