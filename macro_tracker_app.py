@@ -5,17 +5,17 @@ import pandas as pd
 st.set_page_config(page_title="Macro Tracker", layout="centered")
 st.title("🍽️ Lean Bulk Macro Tracker")
 
-# --- Define macro goal presets ---
+# --- Define macro goal presets based on weekly plan ---
 presets = [
-    {"Week":"Week 1","Dates":"Jun 24–30","Calories":1650,"Protein (g)":180,"Fat (g)":44,"Net Carbs (g)":125},
-    {"Week":"Week 2","Dates":"Jul 1–7","Calories":1750,"Protein (g)":180,"Fat (g)":48,"Net Carbs (g)":130},
-    {"Week":"Week 3","Dates":"Jul 8–14","Calories":1850,"Protein (g)":185,"Fat (g)":50,"Net Carbs (g)":137},
-    {"Week":"Week 4","Dates":"Jul 15–21","Calories":1950,"Protein (g)":185,"Fat (g)":52,"Net Carbs (g)":145},
-    {"Week":"Week 5","Dates":"Jul 22–28","Calories":2050,"Protein (g)":190,"Fat (g)":55,"Net Carbs (g)":152},
-    {"Week":"Week 6","Dates":"Jul 29–Aug 4","Calories":2150,"Protein (g)":190,"Fat (g)":57,"Net Carbs (g)":160},
-    {"Week":"Week 7","Dates":"Aug 5–11","Calories":2250,"Protein (g)":190,"Fat (g)":60,"Net Carbs (g)":167},
-    {"Week":"Final Push (Week 8)","Dates":"Aug 12–18 (peak)","Calories":2300,"Protein (g)":190,"Fat (g)":62,"Net Carbs (g)":174},
-    {"Week":"Custom","Dates":"-","Calories":None,"Protein (g)":None,"Fat (g)":None,"Net Carbs (g)":None}
+    {"Week":"Week 1",               "Dates":"Jun 24–30",       "Calories":1650, "Protein (g)":180, "Fat (g)":44, "Net Carbs (g)":125},
+    {"Week":"Week 2",               "Dates":"Jul 1–7",         "Calories":1750, "Protein (g)":180, "Fat (g)":48, "Net Carbs (g)":130},
+    {"Week":"Week 3",               "Dates":"Jul 8–14",        "Calories":1850, "Protein (g)":185, "Fat (g)":50, "Net Carbs (g)":137},
+    {"Week":"Week 4",               "Dates":"Jul 15–21",       "Calories":1950, "Protein (g)":185, "Fat (g)":52, "Net Carbs (g)":145},
+    {"Week":"Week 5",               "Dates":"Jul 22–28",       "Calories":2050, "Protein (g)":190, "Fat (g)":55, "Net Carbs (g)":152},
+    {"Week":"Week 6",               "Dates":"Jul 29–Aug 4",    "Calories":2150, "Protein (g)":190, "Fat (g)":57, "Net Carbs (g)":160},
+    {"Week":"Week 7",               "Dates":"Aug 5–11",        "Calories":2250, "Protein (g)":190, "Fat (g)":60, "Net Carbs (g)":167},
+    {"Week":"Final Push (Week 8)",  "Dates":"Aug 12–18 (peak)","Calories":2300, "Protein (g)":190, "Fat (g)":62, "Net Carbs (g)":174},
+    {"Week":"Custom",               "Dates":"-",               "Calories":None, "Protein (g)":None,"Fat (g)":None,"Net Carbs (g)":None}
 ]
 presets_df = pd.DataFrame(presets).set_index("Week")
 
@@ -28,10 +28,10 @@ plan = st.selectbox(
 selected = presets_df.loc[plan]
 if plan == "Custom":
     st.subheader("➤ Enter Custom Macro Goals")
-    cal_goal     = st.number_input("Calories",      min_value=0,   value=1600)
-    protein_goal = st.number_input("Protein (g)",   min_value=0,   value=180)
-    fat_goal     = st.number_input("Fat (g)",       min_value=0,   value=44)
-    carb_goal    = st.number_input("Net Carbs (g)", min_value=0,   value=121)
+    cal_goal     = st.number_input("Calories",      min_value=0, value=1600)
+    protein_goal = st.number_input("Protein (g)",   min_value=0, value=180)
+    fat_goal     = st.number_input("Fat (g)",       min_value=0, value=44)
+    carb_goal    = st.number_input("Net Carbs (g)", min_value=0, value=121)
 else:
     cal_goal     = int(selected["Calories"])
     protein_goal = int(selected["Protein (g)"])
@@ -43,22 +43,23 @@ else:
         unsafe_allow_html=True
     )
 
-# --- Base foods (with alcohol field) ---
+# --- Base foods (all units now 100g or explicit) ---
 base_foods = [
-    {"Item":"Fairlife Shake","unit":"bottle","P/unit":30,  "F/unit":2.5,"C/unit":4,  "Fiber/unit":0, "Alc/unit":0,  "Cal/unit":None},
-    {"Item":"Whole Egg",     "unit":"egg",   "P/unit":6,   "F/unit":5,  "C/unit":0.5,"Fiber/unit":0, "Alc/unit":0,  "Cal/unit":None},
-    {"Item":"Olive Oil",     "unit":"tbsp",  "P/unit":0,   "F/unit":14, "C/unit":0,  "Fiber/unit":0, "Alc/unit":0,  "Cal/unit":None},
-    {"Item":"Feta Cheese",   "unit":"100g",  "P/unit":14,  "F/unit":21, "C/unit":4,  "Fiber/unit":0, "Alc/unit":0,  "Cal/unit":None},
-    {"Item":"Banana",        "unit":"100g",  "P/unit":1.1, "F/unit":0.3,"C/unit":23, "Fiber/unit":2.6,"Alc/unit":0,  "Cal/unit":None},
-    {"Item":"Strawberries",  "unit":"100g",  "P/unit":0.5, "F/unit":0.2,"C/unit":6,  "Fiber/unit":2,  "Alc/unit":0,  "Cal/unit":None},
-    {"Item":"Blueberries",   "unit":"100g",  "P/unit":0.7, "F/unit":0.3,"C/unit":14, "Fiber/unit":2.5,"Alc/unit":0,  "Cal/unit":None},
-    {"Item":"Blackberries",  "unit":"100g",  "P/unit":1.4, "F/unit":0.5,"C/unit":10, "Fiber/unit":5,  "Alc/unit":0,  "Cal/unit":None},
-    {"Item":"Cracker",       "unit":"pc",    "P/unit":0.2, "F/unit":0.4,"C/unit":2.2,"Fiber/unit":0.2,"Alc/unit":0,  "Cal/unit":None},
-    {"Item":"Honey",         "unit":"tbsp",  "P/unit":0.1, "F/unit":0,  "C/unit":17, "Fiber/unit":0,  "Alc/unit":0,  "Cal/unit":None},
-    {"Item":"Cherries",      "unit":"100g",  "P/unit":1.06,"F/unit":0.2,"C/unit":16, "Fiber/unit":2.1,"Alc/unit":0,  "Cal/unit":None},
-    {"Item":"Triscuit",      "unit":"pc",    "P/unit":0.2, "F/unit":0.4,"C/unit":2.2,"Fiber/unit":0,  "Alc/unit":0,  "Cal/unit":None},
-    # Michelob Ultra entry:
-    {"Item":"Michelob Ultra","unit":"can",   "P/unit":0.6, "F/unit":0,  "C/unit":2.6,"Fiber/unit":0,  "Alc/unit":12, "Cal/unit":95},
+    {"Item":"Fairlife Shake","unit":"bottle","P/unit":30,   "F/unit":2.5, "C/unit":4,    "Fiber/unit":0,   "Alc/unit":0,  "Cal/unit":None},
+    {"Item":"Whole Egg",     "unit":"egg",   "P/unit":6,    "F/unit":5,   "C/unit":0.5,  "Fiber/unit":0,   "Alc/unit":0,  "Cal/unit":None},
+    {"Item":"Olive Oil",     "unit":"tbsp",  "P/unit":0,    "F/unit":14,  "C/unit":0,    "Fiber/unit":0,   "Alc/unit":0,  "Cal/unit":None},
+    {"Item":"Feta Cheese",   "unit":"100g",  "P/unit":14,   "F/unit":21,  "C/unit":4,    "Fiber/unit":0,   "Alc/unit":0,  "Cal/unit":None},
+    {"Item":"Banana",        "unit":"100g",  "P/unit":1.1,  "F/unit":0.3,"C/unit":23,   "Fiber/unit":2.6, "Alc/unit":0,  "Cal/unit":None},
+    {"Item":"Strawberries",  "unit":"100g",  "P/unit":0.5,  "F/unit":0.2,"C/unit":6,    "Fiber/unit":2.0, "Alc/unit":0,  "Cal/unit":None},
+    {"Item":"Blueberries",   "unit":"100g",  "P/unit":0.7,  "F/unit":0.3,"C/unit":14,   "Fiber/unit":2.5, "Alc/unit":0,  "Cal/unit":None},
+    {"Item":"Blackberries",  "unit":"100g",  "P/unit":1.4,  "F/unit":0.5,"C/unit":10,   "Fiber/unit":5.0, "Alc/unit":0,  "Cal/unit":None},
+    {"Item":"Cracker",       "unit":"pc",    "P/unit":0.2,  "F/unit":0.4,"C/unit":2.2,  "Fiber/unit":0.2, "Alc/unit":0,  "Cal/unit":None},
+    {"Item":"Honey",         "unit":"tbsp",  "P/unit":0.1,  "F/unit":0,  "C/unit":17,   "Fiber/unit":0,   "Alc/unit":0,  "Cal/unit":None},
+    {"Item":"Cherries",      "unit":"100g",  "P/unit":1.06, "F/unit":0.2,"C/unit":16,   "Fiber/unit":2.1, "Alc/unit":0,  "Cal/unit":None},
+    {"Item":"Triscuit",      "unit":"pc",    "P/unit":0.2,  "F/unit":0.4,"C/unit":2.2,  "Fiber/unit":0,   "Alc/unit":0,  "Cal/unit":None},
+    {"Item":"Michelob Ultra","unit":"can",   "P/unit":0.6,  "F/unit":0,  "C/unit":2.6,  "Fiber/unit":0,   "Alc/unit":12, "Cal/unit":95},
+    {"Item":"Dry Pasta",     "unit":"100g",  "P/unit":12.5, "F/unit":1.8,"C/unit":75.0, "Fiber/unit":5.4, "Alc/unit":0,  "Cal/unit":None},
+    {"Item":"Yogurt",        "unit":"100g",  "P/unit":10.6, "F/unit":0,  "C/unit":2.9,  "Fiber/unit":0,   "Alc/unit":0,  "Cal/unit":None},
 ]
 
 # --- Session state init ---
@@ -68,30 +69,31 @@ if "next_id"     not in st.session_state: st.session_state.next_id = 1
 
 foods_df = pd.DataFrame(base_foods + st.session_state.custom_foods)
 
-# --- Macro Content Reference Table ---
+# --- Macro Reference Table ---
 st.subheader("📋 Macro Content per Unit")
 ref_df = foods_df.copy()
-# Net carbs:
 ref_df["Net Carbs/unit"] = ref_df["C/unit"] - ref_df["Fiber/unit"]
-# Compute calories per unit: prefer manual label if given
+
 def compute_cal_per_unit(r):
     if pd.notna(r["Cal/unit"]):
         return r["Cal/unit"]
     return r["P/unit"]*4 + r["F/unit"]*9 + r["Net Carbs/unit"]*4 + r["Alc/unit"]*7
 
 ref_df["Calories per unit"] = ref_df.apply(compute_cal_per_unit, axis=1)
+
 st.dataframe(
     ref_df.rename(columns={
-        "Item":"Food","unit":"Unit","P/unit":"Protein (g)","F/unit":"Fat (g)",
-        "C/unit":"Carbs (g)","Fiber/unit":"Fiber (g)","Alc/unit":"Alcohol (g)",
-        "Net Carbs/unit":"Net Carbs (g)","Calories per unit":"Calories per unit"
+        "Item":"Food", "unit":"Unit", "P/unit":"Protein (g)",
+        "F/unit":"Fat (g)", "C/unit":"Carbs (g)", "Fiber/unit":"Fiber (g)",
+        "Net Carbs/unit":"Net Carbs (g)", "Alc/unit":"Alcohol (g)",
+        "Calories per unit":"Calories per unit"
     })[
         ["Food","Unit","Protein (g)","Fat (g)","Carbs (g)",
          "Fiber (g)","Net Carbs (g)","Alcohol (g)","Calories per unit"]
     ]
 )
 
-# --- Add a Custom Food to Menu ---
+# --- Add Custom Food to Menu ---
 st.subheader("➕ Add a Custom Food to Menu")
 with st.form("menu_form", clear_on_submit=True):
     name    = st.text_input("Food Name", key="menu_name")
@@ -104,14 +106,14 @@ with st.form("menu_form", clear_on_submit=True):
     cal_man = st.number_input("Calories per unit (label)", min_value=0.0, key="menu_cal")
     if st.form_submit_button("Add to Menu"):
         st.session_state.custom_foods.append({
-            "Item":      name,
-            "unit":      unit,
-            "P/unit":    p,
-            "F/unit":    f,
-            "C/unit":    c,
-            "Fiber/unit":fiber,
-            "Alc/unit":  alc,
-            "Cal/unit":  cal_man if cal_man > 0 else None
+            "Item":       name,
+            "unit":       unit,
+            "P/unit":     p,
+            "F/unit":     f,
+            "C/unit":     c,
+            "Fiber/unit": fiber,
+            "Alc/unit":   alc,
+            "Cal/unit":   (cal_man if cal_man > 0 else None)
         })
 
 # --- Log a Food Item ---
@@ -131,12 +133,10 @@ with st.form("log_form", clear_on_submit=True):
 if st.session_state.log:
     log_df = pd.DataFrame(st.session_state.log)
 
-    # helper to adjust 100g units
     def adjust(val, unit):
         return val/100 if unit == "100g" else val
 
     n_df = log_df.merge(foods_df, on="Item")
-    # compute macros in grams
     for m in ["P","F","C","Fiber","Alc"]:
         n_df[f"{m}_g"] = n_df.apply(
             lambda r: adjust(r[f"{m}/unit"] * r["Amount"], r["unit"]), axis=1
@@ -147,7 +147,6 @@ if st.session_state.log:
     }, inplace=True)
     n_df["Net_Carbs_g"] = n_df["Carbs_g"] - n_df["Fiber_g"]
 
-    # compute calories per entry: prefer label if available
     def entry_calories(r):
         if pd.notna(r["Cal/unit"]):
             return r["Cal/unit"] * r["Amount"]
@@ -156,7 +155,10 @@ if st.session_state.log:
     n_df["Calories"] = n_df.apply(entry_calories, axis=1)
 
     st.subheader("📝 Current Log")
-    st.dataframe(n_df[["id","Item","Amount","unit","Protein_g","Fat_g","Net_Carbs_g","Fiber_g","Alcohol_g","Calories"]])
+    st.dataframe(n_df[[
+        "id","Item","Amount","unit",
+        "Protein_g","Fat_g","Net_Carbs_g","Fiber_g","Alcohol_g","Calories"
+    ]])
 
     sel = st.selectbox("Select ID to delete", options=n_df["id"].tolist(), key="del_id")
     if st.button("Delete Entry", key="del_entry_button"):
@@ -164,13 +166,12 @@ if st.session_state.log:
     if st.button("Reset Log", key="reset_log_button"):
         st.session_state.log, st.session_state.next_id = [], 1
 
-    # totals and progress
     tot = n_df[["Protein_g","Fat_g","Net_Carbs_g","Calories"]].sum()
     rem = pd.Series({
-        "Protein_g":   max(0, protein_goal - tot["Protein_g"]),
-        "Fat_g":       max(0, fat_goal     - tot["Fat_g"]),
-        "Net_Carbs_g": max(0, carb_goal    - tot["Net_Carbs_g"]),
-        "Calories":    max(0, cal_goal     - tot["Calories"])
+        "Protein_g":   max(0, protein_goal   - tot["Protein_g"]),
+        "Fat_g":       max(0, fat_goal       - tot["Fat_g"]),
+        "Net_Carbs_g": max(0, carb_goal      - tot["Net_Carbs_g"]),
+        "Calories":    max(0, cal_goal       - tot["Calories"])
     })
     st.subheader("✅ Progress vs Goal")
     progress_df = pd.DataFrame({
@@ -179,6 +180,5 @@ if st.session_state.log:
         "Remaining": [rem["Protein_g"],  rem["Fat_g"],  rem["Net_Carbs_g"],  rem["Calories"]]
     }, index=["Protein_g","Fat_g","Net_Carbs_g","Calories"])
     st.dataframe(progress_df)
-
 else:
     st.info("Add some food to begin tracking.")
