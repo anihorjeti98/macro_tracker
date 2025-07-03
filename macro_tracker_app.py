@@ -60,6 +60,8 @@ base_foods = [
     {"Item":"Michelob Ultra","unit":"can",   "P/unit":0.6,  "F/unit":0,  "C/unit":2.6,  "Fiber/unit":0,   "Alc/unit":12, "Cal/unit":95},
     {"Item":"Dry Pasta",     "unit":"100g",  "P/unit":12.5, "F/unit":1.8,"C/unit":75.0, "Fiber/unit":5.4, "Alc/unit":0,  "Cal/unit":None},
     {"Item":"Yogurt",        "unit":"100g",  "P/unit":10.6, "F/unit":0,  "C/unit":2.9,  "Fiber/unit":0,   "Alc/unit":0,  "Cal/unit":None},
+    {"Item":"Tomato",        "unit":"100g",  "P/unit":0.9,  "F/unit":0.2, "C/unit":3.9, "Fiber/unit":1.2, "Alc/unit":0,  "Cal/unit":None},
+}
 ]
 
 # --- Session state init ---
