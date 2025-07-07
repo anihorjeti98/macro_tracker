@@ -45,7 +45,7 @@ else:
 
 # --- Base foods (all units now 100g or explicit) ---
 base_foods = [
-  foods = [
+
     {"Item": "Fairlife Shake",               "unit": "bottle", "P/unit": 30,   "F/unit": 2.5,  "C/unit": 4,    "Fiber/unit": 0,   "Alc/unit": 0,  "Cal/unit": None},
     {"Item": "Whole Egg",                    "unit": "egg",    "P/unit": 6,    "F/unit": 5,    "C/unit": 0.5,  "Fiber/unit": 0,   "Alc/unit": 0,  "Cal/unit": None},
     {"Item": "Olive Oil",                    "unit": "tbsp",   "P/unit": 0,    "F/unit": 14,   "C/unit": 0,    "Fiber/unit": 0,   "Alc/unit": 0,  "Cal/unit": None},
@@ -72,7 +72,7 @@ base_foods = [
     {"Item": "Spring Mix (mesclun)",         "unit": "100g",   "P/unit": 2.35, "F/unit": 0,    "C/unit": 3.53, "Fiber/unit": 2.35,"Alc/unit": 0,  "Cal/unit": None},
     {"Item": "Avocado (flesh, raw)",         "unit": "100g",   "P/unit": 2,    "F/unit": 14.66,"C/unit": 8.53, "Fiber/unit": 6.7, "Alc/unit": 0,  "Cal/unit": None},
 
-]
+
 ]
 
 # --- Session state init ---
