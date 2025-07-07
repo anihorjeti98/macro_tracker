@@ -72,7 +72,7 @@ base_foods = [
     {"Item": "Spring Mix (mesclun)",         "unit": "100g",   "P/unit": 2.35, "F/unit": 0,    "C/unit": 3.53, "Fiber/unit": 2.35,"Alc/unit": 0,  "Cal/unit": None},
     {"Item": "Avocado (flesh, raw)",         "unit": "100g",   "P/unit": 2,    "F/unit": 14.66,"C/unit": 8.53, "Fiber/unit": 6.7, "Alc/unit": 0,  "Cal/unit": None},
 
-
+]
 ]
 
 # --- Session state init ---
